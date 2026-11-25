@@ -4,57 +4,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Motorcycle Parts Management</title>
+<title>د موټرسایکل پرزو مدیریت</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f1f4f8;
-  margin: 0;
-  padding: 20px;
-  text-align: center;
-}
-header {
-  background: #12345a;
-  color: white;
-  padding: 20px;
-  border-radius: 12px;
-}
-.card {
-  background: white;
-  padding: 20px;
-  margin: 15px 0;
-  border-radius: 12px;
-}
-h2 { color: #12345a; }
-button {
-  background: #1674bd;
-  color: white;
-  border: 0;
-  padding: 12px 25px;
-  border-radius: 8px;
-}
+body{font-family:Arial,sans-serif;background:#f1f4f8;margin:0;color:#172033}
+header{background:#123b60;color:white;padding:22px;text-align:center}
+main{padding:16px;max-width:650px;margin:auto}
+select,button,input{padding:12px;margin:6px 0;border-radius:8px;border:1px solid #bbb;font-size:16px}
+button{background:#1769aa;color:white;border:0;cursor:pointer}
+.card{background:white;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.menu button{min-height:55px}
+input{width:90%;background:white}
+h2{color:#123b60}
 </style>
 </head>
 <body>
 <header>
-<h1>د موټرسایکل پرزو مدیریت</h1>
+<h2 style="color:white">د موټرسایکل پرزو مدیریت</h2>
 <p>Motorcycle Parts Management</p>
 </header>
-
+<main>
 <div class="card">
-<h2>ښه راغلاست!</h2>
-<p>د خپلو دوو څانګو مدیریت</p>
+<button onclick="changeLang()">پښتو / English</button>
+<h3 id="branchTitle">څانګه وټاکئ</h3>
+<select id="branch">
+<option>میدان ښار</option>
+<option>کندوز</option>
+</select>
 </div>
-
 <div class="card">
-<h2>د خوست څانګه</h2>
-<button>حسابونه</button>
+<h3 id="dashboard">اصلي صفحه</h3>
+<div class="menu">
+<button onclick="show('products')">پرزې / Products</button>
+<button onclick="show('customers')">پېرودونکي / Customers</button>
+<button onclick="show('sales')">خرڅلاو / Sales</button>
+<button onclick="show('expenses')">لګښتونه / Expenses</button>
+<button onclick="show('reports')">راپورونه / Reports</button>
+<button onclick="show('employees')">کارکوونکي / Employees</button>
 </div>
-
-<div class="card">
-<h2>د میدان ښار څانګه</h2>
-<button>حسابونه</button>
 </div>
-
+<div class="card" id="content">
+<h3>ښه راغلاست!</h3>
+<p>د خپلې څانګې د کار پیل وکړئ.</p>
+</div>
+</main>
+<script>
+let english=false;
+function changeLang(){
+english=!english;
+document.documentElement.dir=english?'ltr':'rtl';
+document.getElementById('branchTitle').innerText=english?'Select Branch':'څانګه وټاکئ';
+document.getElementById('dashboard').innerText=english?'Dashboard':'اصلي صفحه';
+}
+function show(page){
+let names={
+products:['پرزې','Products'],
+customers:['پېرودونکي','Customers'],
+sales:['خرڅلاو','Sales'],
+expenses:['لګښتونه','Expenses'],
+reports:['راپورونه','Reports'],
+employees:['کارکوونکي','Employees']
+};
+let title=names[page][english?1:0];
+document.getElementById('content').innerHTML=
+'<h3>'+title+'</h3><p>'+ (english?'Selected branch: ':'ټاکل شوې څانګه: ') +
+document.getElementById('branch').value+'</p>'+
+(page==='products'||page==='customers'?
+'<input id="itemName" placeholder="'+(english?'Enter name':'نوم ولیکئ')+'">'+
+'<button onclick="addItem()">'+(english?'Add':'اضافه کول')+'</button><div id="items"></div>':
+'<p>'+(english?'This section will be developed next.':'دا برخه به په راتلونکو پړاوونو کې بشپړه شي.')+'</p>');
+}
+function addItem(){
+let input=document.getElementById('itemName');
+if(input.value.trim()){
+let list=document.getElementById('items');
+let row=document.createElement('p');
+row.textContent=input.value;
+list.appendChild(row);
+input.value='';
+}
+}
+</script>
 </body>
 </html>
