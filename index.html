@@ -6,28 +6,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>د موټرسایکل پرزو مدیریت</title>
 <style>
-body{font-family:Arial,sans-serif;background:#f1f4f8;margin:0;color:#172033}
-header{background:#123b60;color:white;padding:22px;text-align:center}
-main{padding:16px;max-width:650px;margin:auto}
-select,button,input{padding:12px;margin:6px 0;border-radius:8px;border:1px solid #bbb;font-size:16px}
-button{background:#1769aa;color:white;border:0;cursor:pointer}
-.card{background:white;padding:16px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
-.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.menu button{min-height:55px}
-input{width:90%;background:white}
-h2{color:#123b60}
+body{font-family:Arial;background:#f1f4f8;margin:0;color:#172033}
+header{background:#123b60;color:white;padding:18px;text-align:center}
+main{padding:12px;max-width:650px;margin:auto}
+.card{background:white;padding:14px;margin:12px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,select,button{box-sizing:border-box;width:100%;padding:12px;margin:5px 0;border:1px solid #bbb;border-radius:8px;font-size:16px}
+button{background:#1769aa;color:white;border:0}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.menu button{min-height:50px}
+.product{border:1px solid #ddd;padding:10px;margin:8px 0;border-radius:8px}
+small{color:#555}
 </style>
 </head>
 <body>
 <header>
-<h2 style="color:white">د موټرسایکل پرزو مدیریت</h2>
+<h2>د موټرسایکل پرزو مدیریت</h2>
 <p>Motorcycle Parts Management</p>
 </header>
 <main>
 <div class="card">
 <button onclick="changeLang()">پښتو / English</button>
 <h3 id="branchTitle">څانګه وټاکئ</h3>
-<select id="branch">
+<select id="branch" onchange="show(currentPage)">
 <option>میدان ښار</option>
 <option>کندوز</option>
 </select>
@@ -50,13 +50,26 @@ h2{color:#123b60}
 </main>
 <script>
 let english=false;
+let currentPage='';
+function key(){
+return 'parts_'+document.getElementById('branch').value;
+}
+function readData(){
+try{return JSON.parse(localStorage.getItem(key())||'[]')}
+catch(e){return []}
+}
+function saveData(data){
+localStorage.setItem(key(),JSON.stringify(data));
+}
 function changeLang(){
 english=!english;
 document.documentElement.dir=english?'ltr':'rtl';
 document.getElementById('branchTitle').innerText=english?'Select Branch':'څانګه وټاکئ';
 document.getElementById('dashboard').innerText=english?'Dashboard':'اصلي صفحه';
+if(currentPage)show(currentPage);
 }
 function show(page){
+currentPage=page;
 let names={
 products:['پرزې','Products'],
 customers:['پېرودونکي','Customers'],
@@ -66,15 +79,92 @@ reports:['راپورونه','Reports'],
 employees:['کارکوونکي','Employees']
 };
 let title=names[page][english?1:0];
-document.getElementById('content').innerHTML=
-'<h3>'+title+'</h3><p>'+ (english?'Selected branch: ':'ټاکل شوې څانګه: ') +
-document.getElementById('branch').value+'</p>'+
-(page==='products'||page==='customers'?
-'<input id="itemName" placeholder="'+(english?'Enter name':'نوم ولیکئ')+'">'+
-'<button onclick="addItem()">'+(english?'Add':'اضافه کول')+'</button><div id="items"></div>':
-'<p>'+(english?'This section will be developed next.':'دا برخه به په راتلونکو پړاوونو کې بشپړه شي.')+'</p>');
+let c=document.getElementById('content');
+if(page==='products'){
+c.innerHTML=`
+<h3>${title}</h3>
+<p>${english?'Selected branch: ':'ټاکل شوې څانګه: '}${document.getElementById('branch').value}</p>
+<label>${english?'Part name':'د پرزې نوم'}</label>
+<input id="pname" placeholder="${english?'Part name':'د پرزې نوم'}">
+<label>${english?'Purchase price in USD':'د رانیولو قیمت په ډالرو'}</label>
+<input id="buyUSD" type="number" step="0.01" placeholder="0.00" oninput="calcBuy()">
+<label>${english?'Dollar exchange rate (AFN)':'د ډالر د تبادلې نرخ په افغانیو'}</label>
+<input id="rate" type="number" step="0.01" placeholder="مثلاً 70" oninput="calcBuy()">
+<label>${english?'Purchase price in AFN':'د رانیولو قیمت په افغانیو'}</label>
+<input id="buyAFN" type="number" readonly placeholder="اتومات حسابېږي">
+<label>${english?'Selling price in USD':'د خرڅولو قیمت په ډالرو'}</label>
+<input id="sellUSD" type="number" step="0.01" placeholder="0.00" oninput="calcSellUSD()">
+<label>${english?'Selling price in AFN':'د خرڅولو قیمت په افغانیو'}</label>
+<input id="sellAFN" type="number" step="0.01" placeholder="0.00" oninput="calcSellAFN()">
+<label>${english?'Quantity':'تعداد'}</label>
+<input id="qty" type="number" min="0" placeholder="0">
+<button onclick="addProduct()">${english?'Add product':'پرزه اضافه کول'}</button>
+<div id="items"></div>`;
+renderProducts();
+}else if(page==='customers'){
+c.innerHTML=`<h3>${title}</h3>
+<input id="itemName" placeholder="${english?'Customer name':'د پېرودونکي نوم'}">
+<button onclick="addCustomer()">${english?'Add':'اضافه کول'}</button>
+<div id="items"></div>`;
+}else{
+c.innerHTML='<h3>'+title+'</h3><p>'+(english?'This section will be developed next.':'دا برخه به په راتلونکو پړاوونو کې بشپړه شي.')+'</p>';
 }
-function addItem(){
+}
+function calcBuy(){
+let usd=Number(document.getElementById('buyUSD').value)||0;
+let rate=Number(document.getElementById('rate').value)||0;
+document.getElementById('buyAFN').value=(usd*rate).toFixed(2);
+}
+function calcSellUSD(){
+let usd=Number(document.getElementById('sellUSD').value)||0;
+let rate=Number(document.getElementById('rate').value)||0;
+document.getElementById('sellAFN').value=rate?(usd*rate).toFixed(2):'';
+}
+function calcSellAFN(){
+let afn=Number(document.getElementById('sellAFN').value)||0;
+let rate=Number(document.getElementById('rate').value)||0;
+document.getElementById('sellUSD').value=rate?(afn/rate).toFixed(2):'';
+}
+function addProduct(){
+let name=document.getElementById('pname').value.trim();
+let rate=Number(document.getElementById('rate').value);
+let buy=Number(document.getElementById('buyUSD').value);
+let sell=Number(document.getElementById('sellUSD').value);
+let qty=Number(document.getElementById('qty').value);
+if(!name||!rate||!qty||qty<0){
+alert(english?'Enter name, exchange rate and quantity':'د پرزې نوم، د تبادلې نرخ او تعداد ولیکئ');
+return;
+}
+let data=readData();
+data.push({
+name:name,buyUSD:buy,rate:rate,buyAFN:buy*rate,
+sellUSD:sell,sellAFN:sell*rate,qty:qty
+});
+saveData(data);
+renderProducts();
+document.getElementById('pname').value='';
+document.getElementById('buyUSD').value='';
+document.getElementById('rate').value='';
+document.getElementById('buyAFN').value='';
+document.getElementById('sellUSD').value='';
+document.getElementById('sellAFN').value='';
+document.getElementById('qty').value='';
+}
+function renderProducts(){
+let box=document.getElementById('items');
+if(!box)return;
+let data=readData();
+box.innerHTML=data.map((p,i)=>`
+<div class="product">
+<b>${p.name}</b><br>
+<small>رانیول: $${p.buyUSD} | ${p.buyAFN.toFixed(2)} AFN</small><br>
+<small>د تبادلې نرخ: ${p.rate}</small><br>
+<small>خرڅول: $${p.sellUSD} | ${p.sellAFN.toFixed(2)} AFN</small><br>
+<small>تعداد: ${p.qty}</small><br>
+<small>د یوې دانې ګټه: ${(p.sellAFN-p.buyAFN).toFixed(2)} AFN</small>
+</div>`).join('');
+}
+function addCustomer(){
 let input=document.getElementById('itemName');
 if(input.value.trim()){
 let list=document.getElementById('items');
