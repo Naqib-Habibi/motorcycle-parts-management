@@ -150,6 +150,7 @@ document.getElementById('sellUSD').value='';
 document.getElementById('sellAFN').value='';
 document.getElementById('qty').value='';
 }
+
 function renderProducts(){
 let box=document.getElementById('items');
 if(!box)return;
@@ -162,7 +163,52 @@ box.innerHTML=data.map((p,i)=>`
 <small>خرڅول: $${p.sellUSD} | ${p.sellAFN.toFixed(2)} AFN</small><br>
 <small>تعداد: ${p.qty}</small><br>
 <small>د یوې دانې ګټه: ${(p.sellAFN-p.buyAFN).toFixed(2)} AFN</small>
+<button onclick="editProduct(${i})">سمول</button>
+<button onclick="deleteProduct(${i})" style="background:#b3261e">حذف</button>
 </div>`).join('');
+}
+
+function editProduct(i){
+let data=readData();
+let p=data[i];
+let name=prompt('د پرزې نوی نوم:',p.name);
+if(name===null)return;
+let buy=prompt('د رانیولو قیمت په ډالرو:',p.buyUSD);
+if(buy===null)return;
+let rate=prompt('د ډالر د تبادلې نرخ:',p.rate);
+if(rate===null)return;
+let sell=prompt('د خرڅولو قیمت په ډالرو:',p.sellUSD);
+if(sell===null)return;
+let qty=prompt('تعداد:',p.qty);
+if(qty===null)return;
+buy=Number(buy);rate=Number(rate);sell=Number(sell);qty=Number(qty);
+if(!name.trim()||rate<=0||buy<0||sell<0||qty<0||![buy,rate,sell,qty].every(Number.isFinite)){
+alert('معلومات سم نه دي');
+return;
+}
+data[i]={
+name:name.trim(),
+buyUSD:buy,
+rate:rate,
+buyAFN:buy*rate,
+sellUSD:sell,
+sellAFN:sell*rate,
+qty:qty
+};
+saveData(data);
+renderProducts();
+alert('پرزه سمه شوه');
+}
+
+function deleteProduct(i){
+if(!confirm('ایا دا پرزه حذف کول غواړې؟'))return;
+let data=readData();
+data.splice(i,1);
+saveData(data);
+renderProducts();
+alert('پرزه حذف شوه');
+}
+
 }
 function addCustomer(){
 let input=document.getElementById('itemName');
